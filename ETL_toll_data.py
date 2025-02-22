@@ -74,11 +74,20 @@ consolidate_data = BashOperator(
 
 #Exercise 3.6 -Transform and load the data
 transform_data = BashOperator(
-    task_id = 'transform_data',
-    bash_command = r"sed 's/[^,]*/\U&/4' /home/project/airflow/dags/finalassignment/extracted_data.csv > /home/project/airflow/dags/finalassignment/transformed_data.csv",
-    dag = dag,
+    task_id='transform_data',
+    bash_command="""
+    cut -d ',' -f1-3 /home/project/airflow/dags/finalassignment/extracted_data.csv \
+        > /tmp/first_three_columns.csv && \
+    cut -d ',' -f4 /home/project/airflow/dags/finalassignment/extracted_data.csv | \
+        tr '[:lower:]' '[:upper:]' > /tmp/uppercase_vehicle_type.csv && \
+    cut -d ',' -f5- /home/project/airflow/dags/finalassignment/extracted_data.csv \
+        > /tmp/remaining_columns.csv && \
+    paste -d ',' /tmp/first_three_columns.csv /tmp/uppercase_vehicle_type.csv /tmp/remaining_columns.csv \
+        > /home/project/airflow/dags/finalassignment/transformed_data.csv
+    """,
+    dag=dag,
 )
 
 
-# task pipeline
+# Exercise 3.7  - task pipeline
 unzip_data >> extract_data_from_csv >> extract_data_from_tsv >> extract_data_from_fixed_width >> consolidate_data >> transform_data
